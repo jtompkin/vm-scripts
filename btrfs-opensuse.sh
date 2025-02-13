@@ -2,10 +2,14 @@
 set -o pipefail
 
 usage() {
-	echo usage:
-	echo btrfs-opensuse-style.sh device mountpoint
+	printf "usage: %s device mountpoint [zstd-compress-num]\n" "$(basename "$0")"
 	echo
-	echo "btrfs 'device' must be mounted at 'mountpoint' before running this script."
+	echo "Arguments:"
+	echo -e "\tdevice            : btrfs formatted block device"
+	echo -e "\tmountpoint        : mount point of 'device'"
+	echo -e "\tzstd-compress-num : compression number for btrfs (default 3)"
+	echo
+	echo "'device' must be mounted at 'mountpoint' before running script"
 	exit 2
 }
 
@@ -20,6 +24,11 @@ fi
 
 device="$1"
 mnt="$2"
+compress="3"
+if [[ -n "$3" ]]; then
+	compress="$3"
+fi
+
 subs=(".snapshots" "boot" "home" "opt" "root" "srv" "tmp" "usr/local" "var")
 
 btrfs subvolume create "${mnt}/@" || die "Could not create initial subvolume: @"
@@ -49,7 +58,8 @@ btrfs subvolume set-default "$(btrfs subvolume list "$mnt" |
 	grep -oP '(?<=ID )[0-9]+')" "$mnt" ||
 	die "Error setting default subvolume"
 umount "$mnt"
-mount "$device" "$mnt" || die "Could not remount btrfs filesystem"
+mount "$device" "$mnt" -o "noatime,compress=zstd:${compress}" ||
+	die "Could not remount btrfs filesystem"
 
 for sub in "${subs[@]}"; do
 	mkdir -p "${mnt}/${sub}"
