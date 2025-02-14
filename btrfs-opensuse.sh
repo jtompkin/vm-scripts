@@ -2,14 +2,12 @@
 set -o pipefail
 
 usage() {
-	printf "usage: %s device mountpoint [zstd-compress-num]\n" "$(basename "$0")"
-	echo
-	echo "Arguments:"
-	echo -e "\tdevice            : btrfs formatted block device"
-	echo -e "\tmountpoint        : mount point of 'device'"
-	echo -e "\tzstd-compress-num : compression number for btrfs (default 3)"
-	echo
-	echo "'device' must be mounted at 'mountpoint' before running script"
+	printf 'usage: %s device mountpoint [zstd-compress-num]\n\n' "$(basename "$0")"
+	printf "arguments:\n"
+	printf "\tdevice            : btrfs formatted block device\n"
+	printf "\tmountpoint        : mount point of 'device'\n"
+	printf "\tzstd-compress-num : compression number for btrfs (default 3)\n\n"
+	printf "'device' must be mounted at 'mountpoint' before running script\n"
 	exit 2
 }
 
@@ -27,6 +25,9 @@ mnt="$2"
 compress="3"
 if [[ -n "$3" ]]; then
 	compress="$3"
+fi
+if [[ "$4" == "_TEST" ]]; then
+	die "$1 $2 $3"
 fi
 
 subs=(".snapshots" "boot" "home" "opt" "root" "srv" "tmp" "usr/local" "var")
